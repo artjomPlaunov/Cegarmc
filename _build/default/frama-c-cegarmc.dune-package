@@ -1,0 +1,68 @@
+(lang dune 3.12)
+(name frama-c-cegarmc)
+(sections (lib .) (lib_root ..) (libexec .))
+(files
+ (lib
+  (META
+   core/Cegarmc.a
+   core/Cegarmc.cma
+   core/Cegarmc.cmxa
+   core/cegarmc.cmi
+   core/cegarmc.cmt
+   core/cegarmc.cmx
+   core/cegarmc.ml
+   core/cegarmc__.cmi
+   core/cegarmc__.cmt
+   core/cegarmc__.cmx
+   core/cegarmc__.ml
+   core/cegarmc__Options.cmi
+   core/cegarmc__Options.cmt
+   core/cegarmc__Options.cmx
+   core/cegarmc__Print.cmi
+   core/cegarmc__Print.cmt
+   core/cegarmc__Print.cmx
+   core/cegarmc__Run.cmi
+   core/cegarmc__Run.cmt
+   core/cegarmc__Run.cmx
+   core/options.ml
+   core/print.ml
+   core/run.ml
+   dune-package))
+ (lib_root (frama-c/plugins/cegarmc/META))
+ (libexec (core/Cegarmc.cmxs)))
+(library
+ (name frama-c-cegarmc.core)
+ (kind normal)
+ (archives (byte core/Cegarmc.cma) (native core/Cegarmc.cmxa))
+ (plugins (byte core/Cegarmc.cma) (native core/Cegarmc.cmxs))
+ (native_archives core/Cegarmc.a)
+ (requires frama-c.gui frama-c.kernel)
+ (main_module_name Cegarmc)
+ (modes byte native)
+ (modules
+  (wrapped
+   (group
+    (alias
+     (obj_name cegarmc__)
+     (visibility public)
+     (kind alias)
+     (source (path Cegarmc__) (impl (path core/cegarmc__.ml-gen))))
+    (name Cegarmc)
+    (modules
+     (module
+      (obj_name cegarmc)
+      (visibility public)
+      (source (path Cegarmc) (impl (path core/cegarmc.ml))))
+     (module
+      (obj_name cegarmc__Options)
+      (visibility public)
+      (source (path Options) (impl (path core/options.ml))))
+     (module
+      (obj_name cegarmc__Print)
+      (visibility public)
+      (source (path Print) (impl (path core/print.ml))))
+     (module
+      (obj_name cegarmc__Run)
+      (visibility public)
+      (source (path Run) (impl (path core/run.ml))))))
+   (wrapped true))))

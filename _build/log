@@ -1,0 +1,22 @@
+# dune exec -- frama-c-gui -cegarmc test.c
+# OCAMLPARAM: unset
+# Shared cache: disabled
+# Shared cache location: /home/artjomplaunov/.cache/dune/db
+# Workspace root: /home/artjomplaunov/repos/Cegarmc
+# Auto-detected concurrency: 8
+# Dune context:
+#  { name = "default"
+#  ; kind = "default"
+#  ; profile = Dev
+#  ; merlin = true
+#  ; fdo_target_exe = None
+#  ; build_dir = In_build_dir "default"
+#  ; installed_env =
+#      map
+#        { "INSIDE_DUNE" : "/home/artjomplaunov/repos/Cegarmc/_build/default"
+#        ; "OCAML_COLOR" : "always"
+#        ; "OPAMCOLOR" : "always"
+#        }
+#  ; instrument_with = []
+#  }
+$ /home/artjomplaunov/.opam/5.0.0/bin/ocamlc.opt -config > /tmp/dune_030eeb_output
