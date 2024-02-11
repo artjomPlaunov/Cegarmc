@@ -1,4 +1,5 @@
 exception MC_Unsupported_Code_Annot of string
+exception MC_Varinfo_Not_Found 
 
 let (prove_assert_msg : string) = "Prove assert using model checking"
 
@@ -17,42 +18,63 @@ let syntax_alarm =
   Emitter.create "Insert Assume For Standalone Assert Check"
     [ Emitter.Code_annot ] ~correctness:[] ~tuning:[]
 
+let rec find_assume_varinfo globals = 
+  match globals with 
+  | [] -> raise MC_Varinfo_Not_Found
+  | (Cil_types.GVarDecl (varinfo,location))::tl ->
+    if varinfo.vname = "__VERIFIER_assume" then 
+      (varinfo,location)
+    else 
+      find_assume_varinfo tl
+  | _::tl -> find_assume_varinfo tl 
+
+
+(* Copy Visitor for inserting an <model checker> assume function call
+   right after a standalone ACSL assert contract. *)
+   class insert_assume_decl prj =
+   object (_)
+     inherit Visitor.generic_frama_c_visitor (Visitor_behavior.copy prj)
+ 
+     method! vfile (f) =
+       let new_fun = Cil.makeGlobalVar "__VERIFIER_assume" (Cil_types.TFun (Cil_types.TVoid [], None, false, [])) in 
+       f.globals <- (Cil_types.GVarDecl  (new_fun, new_fun.vdecl)) :: f.globals;
+       JustCopy
+
+   end
+   
+   
+
+
+
 (* Copy Visitor for inserting an <model checker> assume function call
    right after a standalone ACSL assert contract. *)
 class insert_assume_standalone_assert (sid : int) prj =
   object (_)
     inherit Visitor.generic_frama_c_visitor (Visitor_behavior.copy prj)
 
-    method! vfile (f) =
-      let new_fun = Cil.makeGlobalVar "assume" (Cil_types.TFun (Cil_types.TVoid [], None, false, [])) in 
-      f.globals <- (Cil_types.GVarDecl  (new_fun, new_fun.vdecl)) :: f.globals;
-      JustCopy
-
     method! vblock (b : Cil_types.block) =
-      let _ = Cil.makeGlobalVar "assume" (Cil_types.TFun (Cil_types.TVoid [], None, false, [])) in 
+      let ast = Ast.get () in
+      let globals = ast.globals in 
+      let (assume_varinfo, location) = find_assume_varinfo globals in 
+      let assume_var = Cil_builder.Pure.var assume_varinfo in 
+      let funCall = Cil_builder.Pure.call `none assume_var [] in
+      let funCallInstr = Cil_builder.Pure.cil_instr ~loc:location funCall in 
       let stmts = b.bstmts in
       let stmts1, stmts2 = split_stmts_on_sid stmts sid in
-      let newStmt = Cil.mkStmtOneInstr Cil.dummyInstr in
+      let newStmt = Cil.mkStmtOneInstr funCallInstr in
       b.bstmts <- stmts1 @ [ newStmt ] @ stmts2;
       Cil.ChangeTo b
-
-    (*
-    method! vstmt_aux (s : Cil_types.stmt) =
-      let dstmt = Cil.dummyStmt in
-      dstmt.skind <- s.skind;
-
-      let bloc_kind = Cil_types.Block (Cil.mkBlock [ dstmt; dstmt ]) in
-
-      s.skind <- bloc_kind;
-
-      Cil.ChangeTo s
-      *)
   end
 
 let create_insert_assume_standalone_assert_project (sid : int) () =
   ignore
     (File.create_project_from_visitor "insert assume for standalone assert"
        (new insert_assume_standalone_assert sid))
+
+let create_insert_assume_decl () =
+ignore
+  (File.create_project_from_visitor "insert assume decl"
+      (new insert_assume_decl))
 
 (* Call the model checker on a *standalone* assert contract.
 
@@ -63,17 +85,22 @@ let create_insert_assume_standalone_assert_project (sid : int) () =
 let model_check_standalone_assert (_ : Design.main_window_extension_points)
     (s : Cil_types.stmt) () : unit =
   let newPrj =
-    File.create_project_from_visitor "insert assume"
-      (new insert_assume_standalone_assert s.sid)
+    File.create_project_from_visitor "insert assume decl"
+      (new insert_assume_decl)
   in
 
   Project.on newPrj
     (fun () ->
-      let f = Ast.get () in
-      let chan = open_out "cegarmc_output.c" in
-      let fmt = Format.formatter_of_out_channel chan in
-      Printer.pp_file fmt f)
-    ()
+      let finalPrj = 
+        File.create_project_from_visitor "insert assume"
+        (new insert_assume_standalone_assert s.sid)
+      in 
+      Project.on finalPrj
+        (fun () -> 
+          let f = Ast.get () in
+          let chan = open_out "cegarmc_output.c" in
+          let fmt = Format.formatter_of_out_channel chan in
+          Printer.pp_file fmt f) () ) ()
 
 (* Check if code annotations is a single assert. *)
 let code_annots_eq_standalone_assert (cs : Cil_types.code_annotation list) :

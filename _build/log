@@ -19,4 +19,4 @@
 #        }
 #  ; instrument_with = []
 #  }
-$ /home/artjomplaunov/.opam/5.0.0/bin/ocamlc.opt -config > /tmp/dune_87295f_output
+$ /home/artjomplaunov/.opam/5.0.0/bin/ocamlc.opt -config > /tmp/dune_f9a89d_output
