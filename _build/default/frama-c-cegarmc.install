@@ -1,0 +1,36 @@
+lib: [
+  "_build/install/default/lib/frama-c-cegarmc/META"
+  "_build/install/default/lib/frama-c-cegarmc/core/Cegarmc.a" {"core/Cegarmc.a"}
+  "_build/install/default/lib/frama-c-cegarmc/core/Cegarmc.cma" {"core/Cegarmc.cma"}
+  "_build/install/default/lib/frama-c-cegarmc/core/Cegarmc.cmxa" {"core/Cegarmc.cmxa"}
+  "_build/install/default/lib/frama-c-cegarmc/core/cegarmc.cmi" {"core/cegarmc.cmi"}
+  "_build/install/default/lib/frama-c-cegarmc/core/cegarmc.cmt" {"core/cegarmc.cmt"}
+  "_build/install/default/lib/frama-c-cegarmc/core/cegarmc.cmx" {"core/cegarmc.cmx"}
+  "_build/install/default/lib/frama-c-cegarmc/core/cegarmc.ml" {"core/cegarmc.ml"}
+  "_build/install/default/lib/frama-c-cegarmc/core/cegarmc__.cmi" {"core/cegarmc__.cmi"}
+  "_build/install/default/lib/frama-c-cegarmc/core/cegarmc__.cmt" {"core/cegarmc__.cmt"}
+  "_build/install/default/lib/frama-c-cegarmc/core/cegarmc__.cmx" {"core/cegarmc__.cmx"}
+  "_build/install/default/lib/frama-c-cegarmc/core/cegarmc__.ml" {"core/cegarmc__.ml"}
+  "_build/install/default/lib/frama-c-cegarmc/core/cegarmc__Options.cmi" {"core/cegarmc__Options.cmi"}
+  "_build/install/default/lib/frama-c-cegarmc/core/cegarmc__Options.cmt" {"core/cegarmc__Options.cmt"}
+  "_build/install/default/lib/frama-c-cegarmc/core/cegarmc__Options.cmx" {"core/cegarmc__Options.cmx"}
+  "_build/install/default/lib/frama-c-cegarmc/core/cegarmc__Print.cmi" {"core/cegarmc__Print.cmi"}
+  "_build/install/default/lib/frama-c-cegarmc/core/cegarmc__Print.cmt" {"core/cegarmc__Print.cmt"}
+  "_build/install/default/lib/frama-c-cegarmc/core/cegarmc__Print.cmx" {"core/cegarmc__Print.cmx"}
+  "_build/install/default/lib/frama-c-cegarmc/core/cegarmc__Run.cmi" {"core/cegarmc__Run.cmi"}
+  "_build/install/default/lib/frama-c-cegarmc/core/cegarmc__Run.cmt" {"core/cegarmc__Run.cmt"}
+  "_build/install/default/lib/frama-c-cegarmc/core/cegarmc__Run.cmx" {"core/cegarmc__Run.cmx"}
+  "_build/install/default/lib/frama-c-cegarmc/core/options.ml" {"core/options.ml"}
+  "_build/install/default/lib/frama-c-cegarmc/core/print.ml" {"core/print.ml"}
+  "_build/install/default/lib/frama-c-cegarmc/core/run.ml" {"core/run.ml"}
+  "_build/install/default/lib/frama-c-cegarmc/dune-package"
+]
+lib_root: [
+  "_build/install/default/lib/frama-c/plugins/cegarmc/META" {"frama-c/plugins/cegarmc/META"}
+]
+libexec: [
+  "_build/install/default/lib/frama-c-cegarmc/core/Cegarmc.cmxs" {"core/Cegarmc.cmxs"}
+]
+doc: [
+  "_build/install/default/doc/frama-c-cegarmc/README.md"
+]

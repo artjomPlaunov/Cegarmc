@@ -23,20 +23,13 @@ class insert_assume_standalone_assert (sid : int) prj =
   object (_)
     inherit Visitor.generic_frama_c_visitor (Visitor_behavior.copy prj)
 
-    method! vfile (f) =
-      let new_fun = Cil.makeGlobalVar "assume" (Cil_types.TFun (Cil_types.TVoid [], None, false, [])) in 
-      f.globals <- (Cil_types.GVarDecl  (new_fun, new_fun.vdecl)) :: f.globals;
-      JustCopy
-
     method! vblock (b : Cil_types.block) =
-      let _ = Cil.makeGlobalVar "assume" (Cil_types.TFun (Cil_types.TVoid [], None, false, [])) in 
       let stmts = b.bstmts in
       let stmts1, stmts2 = split_stmts_on_sid stmts sid in
-      let newStmt = Cil.mkStmtOneInstr Cil.dummyInstr in
+      let newStmt = Cil.dummyStmt in
       b.bstmts <- stmts1 @ [ newStmt ] @ stmts2;
       Cil.ChangeTo b
 
-    (*
     method! vstmt_aux (s : Cil_types.stmt) =
       let dstmt = Cil.dummyStmt in
       dstmt.skind <- s.skind;
@@ -46,7 +39,6 @@ class insert_assume_standalone_assert (sid : int) prj =
       s.skind <- bloc_kind;
 
       Cil.ChangeTo s
-      *)
   end
 
 let create_insert_assume_standalone_assert_project (sid : int) () =
