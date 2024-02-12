@@ -1,6 +1,6 @@
 int main () {
-    int x = 1;
-    /*@ assert 1 == 1;*/
+    int x;
+    /*@ assert x == 100;*/
     if (x == 1) {
         int y = 6;
     } else {

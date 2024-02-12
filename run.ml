@@ -1,6 +1,9 @@
 exception MC_Unsupported_Code_Annot of string
 exception MC_Varinfo_Not_Found
 exception MC_Unsupported_Predicate_to_C_Conversion
+exception MC_Unsupported_Term_to_C_Conversion
+exception MC_Unsupported_Logic_Constant_to_C_Conversion
+exception MC_Unsupported_Term_lhost_to_C_Conversion
 
 let (prove_assert_msg : string) = "Prove assert using model checking"
 
@@ -19,46 +22,82 @@ let syntax_alarm =
   Emitter.create "Insert Assume For Standalone Assert Check"
     [ Emitter.Code_annot ] ~correctness:[] ~tuning:[]
 
-let rec find_assume_varinfo globals =
+let rec find_assert_varinfo globals =
   match globals with
   | [] -> raise MC_Varinfo_Not_Found
   | Cil_types.GVarDecl (varinfo, location) :: tl ->
-      if varinfo.vname = "__VERIFIER_assume" then (varinfo, location)
-      else find_assume_varinfo tl
-  | _ :: tl -> find_assume_varinfo tl
+      if varinfo.vname = "__VERIFIER_assert" then (varinfo, location)
+      else find_assert_varinfo tl
+  | _ :: tl -> find_assert_varinfo tl
 
 (* Copy Visitor for inserting an <model checker> assume function call
    right after a standalone ACSL assert contract. *)
-class insert_assume_decl prj =
+class insert_assert_decl prj =
   object (_)
     inherit Visitor.generic_frama_c_visitor (Visitor_behavior.copy prj)
 
     method! vfile f =
       let new_fun =
-        Cil.makeGlobalVar "__VERIFIER_assume"
+        Cil.makeGlobalVar "__VERIFIER_assert"
           (Cil_types.TFun (Cil_types.TVoid [], None, false, []))
       in
       f.globals <- Cil_types.GVarDecl (new_fun, new_fun.vdecl) :: f.globals;
       JustCopy
   end
 
-let acsl_predicate_to_expr (predicate: Cil_types.predicate_node) : Cil_builder.Pure.exp = 
-  match predicate with 
-  | Pfalse -> Cil_builder.Pure.zero 
+let acsl_logic_constant_to_exp (lc : Cil_types.logic_constant) =
+  let module CT = Cil_types in
+  let module CB = Cil_builder.Pure in
+  match lc with 
+  | Integer (x, _) -> CB.of_integer x
+  | _ -> raise MC_Unsupported_Logic_Constant_to_C_Conversion
+
+let acsl_term_lhost_to_exp (tlh : Cil_types.term_lhost) = 
+  let module CT = Cil_types in
+  let module CB = Cil_builder.Pure in
+  match tlh with
+  | TVar lv -> (
+    match lv.lv_origin with 
+    | Some varinfo -> CB.var varinfo
+    | None -> raise MC_Unsupported_Term_lhost_to_C_Conversion)
+  | _ -> raise MC_Unsupported_Term_lhost_to_C_Conversion
+
+let rec acsl_term_to_exp (term : Cil_types.term) :
+    Cil_builder.Pure.exp = 
+    let module CT = Cil_types in
+    let module CB = Cil_builder.Pure in
+    match term.term_node with
+    | CT.TConst lc -> 
+      acsl_logic_constant_to_exp lc
+    | CT.TLval (lhost,_) -> acsl_term_lhost_to_exp lhost
+    | TLogic_coerce (_,t) -> acsl_term_to_exp t  
+    | _ -> raise MC_Unsupported_Term_to_C_Conversion
+
+
+
+
+let acsl_predicate_to_exp (predicate : Cil_types.predicate_node) :
+    Cil_builder.Pure.exp =
+  let module CT = Cil_types in
+  let module CB = Cil_builder.Pure in
+  match predicate with
+  | CT.Prel (Req, t1, t2) -> 
+    let e1 = acsl_term_to_exp t1 in 
+    let e2 = acsl_term_to_exp t2 in 
+    CB.( == ) e1 e2
   | _ -> raise MC_Unsupported_Predicate_to_C_Conversion
 
-(* Copy Visitor for inserting an <model checker> assume function call
-   right after a standalone ACSL assert contract. *)
-class insert_assume_standalone_assert (sid : int) prj =
+
+class insert_assert (sid : int) prj =
   object (_)
     inherit Visitor.generic_frama_c_visitor (Visitor_behavior.copy prj)
 
     method! vblock (b : Cil_types.block) =
       let ast = Ast.get () in
       let globals = ast.globals in
-      let assume_varinfo, location = find_assume_varinfo globals in
+      let assume_varinfo, location = find_assert_varinfo globals in
       let assume_var = Cil_builder.Pure.var assume_varinfo in
-      
+
       let stmts = b.bstmts in
       let stmts1, stmts2 = split_stmts_on_sid stmts sid in
       let assertStmt = List.hd stmts2 in
@@ -66,16 +105,16 @@ class insert_assume_standalone_assert (sid : int) prj =
       let assert_annot = List.hd code_annots in
       let e =
         match assert_annot.annot_content with
-        | Cil_types.AAssert (_, tp) -> 
-          let pred_content = tp.tp_statement.pred_content in 
-          acsl_predicate_to_expr pred_content
+        | Cil_types.AAssert (_, tp) ->
+            let pred_content = tp.tp_statement.pred_content in
+            acsl_predicate_to_exp pred_content
         | _ ->
             raise
               (MC_Unsupported_Code_Annot
                  "Expected Assert Code annotation in \
                   insert_assume_standalone_assert vblock visitor")
       in
-      let funCall = Cil_builder.Pure.call `none assume_var [e] in
+      let funCall = Cil_builder.Pure.call `none assume_var [ e ] in
       let funCallInstr = Cil_builder.Pure.cil_instr ~loc:location funCall in
 
       let newStmt = Cil.mkStmtOneInstr funCallInstr in
@@ -85,32 +124,26 @@ class insert_assume_standalone_assert (sid : int) prj =
 
 let create_insert_assume_standalone_assert_project (sid : int) () =
   ignore
-    (File.create_project_from_visitor "insert assume for standalone assert"
-       (new insert_assume_standalone_assert sid))
+    (File.create_project_from_visitor "insert assert"
+       (new insert_assert sid))
 
 let create_insert_assume_decl () =
   ignore
     (File.create_project_from_visitor "insert assume decl"
-       (new insert_assume_decl))
+       (new insert_assert_decl))
 
-(* Call the model checker on a *standalone* assert contract.
-
-   TODO: right now, the plugin only integrates with CPAchecker;
-   once support for other model checkers is added, there is a different
-   assume functional call syntax for each model checker (SATABS, CBMC).
-*)
 let model_check_standalone_assert (_ : Design.main_window_extension_points)
     (s : Cil_types.stmt) () : unit =
   let newPrj =
     File.create_project_from_visitor "insert assume decl"
-      (new insert_assume_decl)
+      (new insert_assert_decl)
   in
 
   Project.on newPrj
     (fun () ->
       let finalPrj =
-        File.create_project_from_visitor "insert assume"
-          (new insert_assume_standalone_assert s.sid)
+        File.create_project_from_visitor "insert assert"
+          (new insert_assert s.sid)
       in
       Project.on finalPrj
         (fun () ->
@@ -121,7 +154,6 @@ let model_check_standalone_assert (_ : Design.main_window_extension_points)
         ())
     ()
 
-(* Check if code annotations is a single assert. *)
 let code_annots_eq_standalone_assert (cs : Cil_types.code_annotation list) :
     bool =
   if List.length cs <> 1 then false
@@ -133,7 +165,6 @@ let code_annots_eq_standalone_assert (cs : Cil_types.code_annotation list) :
         if List.length behaviors <> 0 then false else true
     | _ -> false
 
-(* Fetch the predicate from an assert code annotation.*)
 let get_code_annot_assert_predicate
     (code_annot : Cil_types.code_annotation_node) : Cil_types.predicate =
   match code_annot with
@@ -153,11 +184,7 @@ let model_checking_selector (popup_factory : GMenu.menu GMenu.factory)
       if not (Annotations.has_code_annot stmt) then
         Options.Self.feedback "Nothing to check here."
       else
-        (*  Fetch statement code annotations. *)
         let code_annots = Annotations.code_annot stmt in
-        (* Model Check an assert.
-           This is the simplest case, when there is a stand-alone assert
-           ACSL predicate to be verified by a model checker. *)
         if code_annots_eq_standalone_assert code_annots then
           let assert_annot = (List.hd code_annots).annot_content in
           let _ = get_code_annot_assert_predicate assert_annot in
