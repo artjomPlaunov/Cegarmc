@@ -1,3 +1,0 @@
-__VERIFIER_assert::cond@2: 0
-main::x@2: 5
-main::y@2: 6
