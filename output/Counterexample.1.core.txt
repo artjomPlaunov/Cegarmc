@@ -1,0 +1,9 @@
+line 11:	N10 -{int x = 5;}-> N11
+	x == 5;
+line 12:	N11 -{int y = 6;}-> N12
+	x == 5;
+	y == 6;
+line 13:	N12 -{__VERIFIER_assert(x == y)}-> N1
+	cond == 0;
+line 2:	N2 -{[cond == 0]}-> N4
+	cond == 0;

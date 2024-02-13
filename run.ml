@@ -1,194 +1,175 @@
 exception MC_Unsupported_Code_Annot of string
-exception MC_Varinfo_Not_Found
-exception MC_Unsupported_Predicate_to_C_Conversion
-exception MC_Unsupported_Term_to_C_Conversion
-exception MC_Unsupported_Logic_Constant_to_C_Conversion
-exception MC_Unsupported_Term_lhost_to_C_Conversion
+
+module T = Translate
+module CT = Cil_types
+module CB = Cil_builder.Pure
+module U = Utils
 
 let (prove_assert_msg : string) = "Prove assert using model checking"
 
-let rec split_stmts_on_sid_aux res (stmts : Cil_types.stmt list) sid =
-  match stmts with
-  | [] -> (res, [])
-  | hd :: tl ->
-      if hd.sid = sid then (res, stmts)
-      else split_stmts_on_sid_aux (res @ [ hd ]) tl sid
-
-let split_stmts_on_sid (stmts : Cil_types.stmt list) (sid : int) :
-    Cil_types.stmt list * Cil_types.stmt list =
-  split_stmts_on_sid_aux [] stmts sid
-
-let syntax_alarm =
-  Emitter.create "Insert Assume For Standalone Assert Check"
-    [ Emitter.Code_annot ] ~correctness:[] ~tuning:[]
-
-let rec find_assert_varinfo globals =
-  match globals with
-  | [] -> raise MC_Varinfo_Not_Found
-  | Cil_types.GVarDecl (varinfo, location) :: tl ->
-      if varinfo.vname = "__VERIFIER_assert" then (varinfo, location)
-      else find_assert_varinfo tl
-  | _ :: tl -> find_assert_varinfo tl
-
-(* Copy Visitor for inserting an <model checker> assume function call
-   right after a standalone ACSL assert contract. *)
-class insert_assert_decl prj =
+(* Copy Visitor for inserting <mc> functions
+   into the global environment. *)
+class insert_mc_functions prj =
   object (_)
     inherit Visitor.generic_frama_c_visitor (Visitor_behavior.copy prj)
 
     method! vfile f =
+      let module CT = CT in
+      let params = ("", CT.TInt (CT.IInt, []), []) in
       let new_fun =
         Cil.makeGlobalVar "__VERIFIER_assert"
-          (Cil_types.TFun (Cil_types.TVoid [], None, false, []))
+          (CT.TFun (CT.TVoid ([]), Some [ params ], false, []))
       in
-      f.globals <- Cil_types.GVarDecl (new_fun, new_fun.vdecl) :: f.globals;
+      new_fun.vstorage <- CT.Extern;
+      let cil_function = CT.Declaration (U.empty_spec, new_fun, None, new_fun.vdecl) in
+      let kf = { CT.fundec = cil_function; spec = U.empty_spec } in
+      let () = Globals.Functions.register kf in
+      f.globals <- CT.GFunDecl (U.empty_spec, new_fun, new_fun.vdecl) :: f.globals;
       JustCopy
   end
 
-let acsl_logic_constant_to_exp (lc : Cil_types.logic_constant) =
-  let module CT = Cil_types in
-  let module CB = Cil_builder.Pure in
-  match lc with 
-  | Integer (x, _) -> CB.of_integer x
-  | _ -> raise MC_Unsupported_Logic_Constant_to_C_Conversion
+(* constructor for insert_mc_functions visitor. *)
+let create_insert_mc_functions_visitor () =
+  File.create_project_from_visitor "insert mc functions and declarations "
+    (new insert_mc_functions)
 
-let acsl_term_lhost_to_exp (tlh : Cil_types.term_lhost) = 
-  let module CT = Cil_types in
-  let module CB = Cil_builder.Pure in
-  match tlh with
-  | TVar lv -> (
-    match lv.lv_origin with 
-    | Some varinfo -> CB.var varinfo
-    | None -> raise MC_Unsupported_Term_lhost_to_C_Conversion)
-  | _ -> raise MC_Unsupported_Term_lhost_to_C_Conversion
-
-let rec acsl_term_to_exp (term : Cil_types.term) :
-    Cil_builder.Pure.exp = 
-    let module CT = Cil_types in
-    let module CB = Cil_builder.Pure in
-    match term.term_node with
-    | CT.TConst lc -> 
-      acsl_logic_constant_to_exp lc
-    | CT.TLval (lhost,_) -> acsl_term_lhost_to_exp lhost
-    | TLogic_coerce (_,t) -> acsl_term_to_exp t  
-    | _ -> raise MC_Unsupported_Term_to_C_Conversion
-
-
-
-
-let acsl_predicate_to_exp (predicate : Cil_types.predicate_node) :
-    Cil_builder.Pure.exp =
-  let module CT = Cil_types in
-  let module CB = Cil_builder.Pure in
-  match predicate with
-  | CT.Prel (Req, t1, t2) -> 
-    let e1 = acsl_term_to_exp t1 in 
-    let e2 = acsl_term_to_exp t2 in 
-    CB.( == ) e1 e2
-  | _ -> raise MC_Unsupported_Predicate_to_C_Conversion
-
-
-class insert_assert (sid : int) prj =
+(* Copy visitor for inserting an <mc> assert
+   right before the ACSL assert that is selected,
+   which is located via its sid, the parameter being passed
+   to the copy visitor.
+*)
+class insert_mc_assert (sid : int) prj =
   object (_)
     inherit Visitor.generic_frama_c_visitor (Visitor_behavior.copy prj)
 
-    method! vblock (b : Cil_types.block) =
-      let ast = Ast.get () in
-      let globals = ast.globals in
-      let assume_varinfo, location = find_assert_varinfo globals in
-      let assume_var = Cil_builder.Pure.var assume_varinfo in
-
+    (* An ACSL assert is tied to a statement, so in order to access it and 
+       insert  an <mc> assert function call statement, we perform the 
+       insertion at block level. *)
+    method! vblock (b : CT.block) =
+      (* Split the statements comprising the block on the sid
+         of the ACSL assert predicate statement being verified.
+      *)
       let stmts = b.bstmts in
-      let stmts1, stmts2 = split_stmts_on_sid stmts sid in
-      let assertStmt = List.hd stmts2 in
-      let code_annots = Annotations.code_annot assertStmt in
-      let assert_annot = List.hd code_annots in
-      let e =
-        match assert_annot.annot_content with
-        | Cil_types.AAssert (_, tp) ->
-            let pred_content = tp.tp_statement.pred_content in
-            acsl_predicate_to_exp pred_content
-        | _ ->
-            raise
-              (MC_Unsupported_Code_Annot
-                 "Expected Assert Code annotation in \
-                  insert_assume_standalone_assert vblock visitor")
-      in
-      let funCall = Cil_builder.Pure.call `none assume_var [ e ] in
-      let funCallInstr = Cil_builder.Pure.cil_instr ~loc:location funCall in
+      let stmts1, stmts2 = Utils.split_stmts_on_sid stmts sid in
 
-      let newStmt = Cil.mkStmtOneInstr funCallInstr in
-      b.bstmts <- stmts1 @ [ newStmt ] @ stmts2;
-      Cil.ChangeTo b
+      (* If stmts2 is empty, then we are in a different block.
+         Just copy this block and move on.
+      *)
+      if stmts2 = [] then JustCopy
+      else
+        (* Otherwise, we are in the block with the assert to be
+           verified, and we can insert an <mc> assert.
+        *)
+
+        (* Fetch the statement corresponding to the ACSL assert,
+           fetch the assert code annotation, and convert the
+           ACSL predicate to a CB exp.
+        *)
+        let assertStmt = List.hd stmts2 in
+        let code_annots = Annotations.code_annot assertStmt in
+        let assert_annot = List.hd code_annots in
+        
+        let acsl_exp =
+          match assert_annot.annot_content with
+          | CT.AAssert (_, tp) ->
+              let pred_content = tp.tp_statement.pred_content in
+              T.acsl_predicate_to_exp pred_content
+          | _ ->
+              raise
+                (MC_Unsupported_Code_Annot
+                   "Expected Assert Code annotation in \
+                    insert_mc_assert vblock visitor")
+        in
+
+        (* Fetch the varinfo for the <mc> assert function,
+           and construct a CB var for it. *)
+        let ast = Ast.get () in
+        let globals = ast.globals in
+        let assume_varinfo, location = Utils.find_assert_varinfo globals in
+        let assume_var = CB.var assume_varinfo in
+
+        (* Construct a CT instruction
+           which corresponds to an <mc> assert call.*)
+        let funCall = CB.call `none assume_var [ acsl_exp ] in
+        let funCallInstr = CB.cil_instr ~loc:location funCall in
+
+        (* Insert the <mc> assert function call as a new
+           statement in the block. *)
+        let newStmt = Cil.mkStmtOneInstr funCallInstr in
+        b.bstmts <- stmts1 @ [ newStmt ] @ stmts2;
+        Cil.ChangeTo b
   end
 
-let create_insert_assume_standalone_assert_project (sid : int) () =
-  ignore
-    (File.create_project_from_visitor "insert assert"
-       (new insert_assert sid))
+(* Constructor for insert_mc_assert visitor. *)
+let create_insert_mc_assert_visitor sid () =
+  File.create_project_from_visitor "insert mc assert" (new insert_mc_assert sid)
 
-let create_insert_assume_decl () =
-  ignore
-    (File.create_project_from_visitor "insert assume decl"
-       (new insert_assert_decl))
+(* Model check a standalone assert, i.e.,
+   a basic reachability verification.
+*)
+let mc_standalone_assert (s : CT.stmt) () : unit =
 
-let model_check_standalone_assert (_ : Design.main_window_extension_points)
-    (s : Cil_types.stmt) () : unit =
-  let newPrj =
-    File.create_project_from_visitor "insert assume decl"
-      (new insert_assert_decl)
+  (* First, use a copy visitor to insert the necessary
+     declarations and functions for the model checker. *)
+  let insert_decls_prj = create_insert_mc_functions_visitor () in
+
+  (* Next, use a copy visitor to create the project from
+     which we call the model checker.
+     This calls the insert_assert visitor to insert the
+     <mc_verifier> assert function call.
+  *)
+  let mc_project =
+    Project.on insert_decls_prj (create_insert_mc_assert_visitor s.sid) ()
   in
 
-  Project.on newPrj
+  (* Finally we print the AST to an output file, and this
+     should be <mc> ready. *)
+  Project.on mc_project
     (fun () ->
-      let finalPrj =
-        File.create_project_from_visitor "insert assert"
-          (new insert_assert s.sid)
-      in
-      Project.on finalPrj
-        (fun () ->
-          let f = Ast.get () in
-          let chan = open_out "cegarmc_output.c" in
-          let fmt = Format.formatter_of_out_channel chan in
-          Printer.pp_file fmt f)
-        ())
+      let lines = ref [] in 
+      let in_chan = open_in "cpa_defs.c" in 
+      let cpa_headers = 
+        try 
+        while true; do
+          lines := input_line in_chan :: !lines
+          done; !lines
+        with End_of_file ->
+          close_in in_chan;
+          List.rev !lines;
+      in 
+      let f = Ast.get () in
+      let chan = open_out "cegarmc_output.c" in
+      let fmt = Format.formatter_of_out_channel chan in
+      let () = List.iter (fun s  -> Printf.fprintf chan "%s\n" s) cpa_headers in
+      Printer.pp_file fmt f
+
+      )
     ()
 
-let code_annots_eq_standalone_assert (cs : Cil_types.code_annotation list) :
-    bool =
+(* Check if code annotations have a standalone assert. *)
+let has_standalone_assert (cs : CT.code_annotation list) : bool =
   if List.length cs <> 1 then false
   else
     match (List.hd cs).annot_content with
-    | Cil_types.AAssert (behaviors, _) ->
+    | CT.AAssert (behaviors, _) ->
         (* We don't want any behaviors here, just looking for a standalone
            assert to model check. *)
         if List.length behaviors <> 0 then false else true
     | _ -> false
 
-let get_code_annot_assert_predicate
-    (code_annot : Cil_types.code_annotation_node) : Cil_types.predicate =
-  match code_annot with
-  | AAssert (_, tp) -> tp.tp_statement
-  | _ ->
-      raise
-        (MC_Unsupported_Code_Annot
-           "Unsupported code annotation in get_code_annot_predicate")
-
 let model_checking_selector (popup_factory : GMenu.menu GMenu.factory)
-    (main_ui : Design.main_window_extension_points) ~button:_
+    (_ : Design.main_window_extension_points) ~button:_
     (localizable : Pretty_source.localizable) =
   match localizable with
   (*  User has made a statement selection. *)
   | Printer_tag.PStmt (_, stmt) ->
-      (*  Check if statement has any code annotations. *)
       if not (Annotations.has_code_annot stmt) then
         Options.Self.feedback "Nothing to check here."
       else
         let code_annots = Annotations.code_annot stmt in
-        if code_annots_eq_standalone_assert code_annots then
-          let assert_annot = (List.hd code_annots).annot_content in
-          let _ = get_code_annot_assert_predicate assert_annot in
-          let callback = model_check_standalone_assert main_ui stmt in
+        (* Standalone Assert Verification *)
+        if has_standalone_assert code_annots then
+          let callback = mc_standalone_assert stmt in
           ignore (popup_factory#add_item prove_assert_msg ~callback)
         else ()
   | _ -> ()

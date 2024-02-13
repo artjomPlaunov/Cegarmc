@@ -1,0 +1,9 @@
+digraph functioncalls {
+rankdir=LR;
+
+main [shape="box", color=blue];
+__VERIFIER_assert [label="__VERIFIER_assert", ];
+main -> __VERIFIER_assert;
+abort [label="abort", shape="box", color=grey];
+__VERIFIER_assert -> abort;
+}
