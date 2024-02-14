@@ -10,33 +10,16 @@ let mc_assert_emitter =
     [ Emitter.Property_status ]
     ~correctness:[] ~tuning:[]
 
-let output_mc_file () = 
-  let f = Ast.get () in
-    let chan = open_out "cegarmc_output.c" in
-    let fmt = Format.formatter_of_out_channel chan in
-    let cpa_headers = U.read_mc_defs "cpa_defs.h" in 
-    let () = List.iter (fun s -> Printf.fprintf chan "%s\n" s) cpa_headers in
-    Printer.pp_file fmt f
-
-let run_mc () : int = 
-  let cpa_cmd =
-    "$CPACHECKER/scripts/cpa.sh -predicateAnalysis cegarmc_output.c"
-  in
-  let _ = Sys.command cpa_cmd in
-  Sys.command "./mc-helper.sh < output/Statistics.txt"
-
 
 (* Model check a standalone assert, i.e.,
    a basic reachability verification.
 *)
 let mc_standalone_assert (s : CT.stmt) (c : CT.code_annotation)
     (ui : Design.main_window_extension_points) () : unit =
-  
   (* First, use a copy visitor to insert the necessary
-     declarations and functions for the model checker. 
-  *)
+     declarations and functions for the model checker. *)
   let insert_decls_prj = MCV.create_insert_mc_functions_visitor () in
-  
+
   (* Next, use a copy visitor to create the project from
      which we call the model checker.
      This calls the insert_assert visitor to insert the
@@ -45,19 +28,30 @@ let mc_standalone_assert (s : CT.stmt) (c : CT.code_annotation)
   let mc_project =
     Project.on insert_decls_prj (MCV.create_insert_mc_assert_visitor s.sid) ()
   in
-  (* Finally we print the AST to an output file, and this
-     should be <mc> ready. 
-  *)
-  Project.on mc_project (fun () -> output_mc_file ()) ();
 
-  (* Run <mc> on generated file and register property status. *)
-  let mc_result = run_mc () in 
+  (* Finally we print the AST to an output file, and this
+     should be <mc> ready. *)
+  Project.on mc_project
+    (fun () ->
+      let f = Ast.get () in
+      let chan = open_out "cegarmc_output.c" in
+      let fmt = Format.formatter_of_out_channel chan in
+      let cpa_headers = U.read_mc_defs "cpa_defs.h" in 
+      let () = List.iter (fun s -> Printf.fprintf chan "%s\n" s) cpa_headers in
+      Printer.pp_file fmt f)
+    ();
+  let cpa_cmd =
+    "$CPACHECKER/scripts/cpa.sh -predicateAnalysis cegarmc_output.c"
+  in
+  let _ = Sys.command cpa_cmd in
+  let mc_result = Sys.command "./mc-helper.sh < output/Statistics.txt" in
+
   let kf = Kernel_function.find_englobing_kf s in
   let p = Property.ip_of_code_annot_single kf s c in
 
   match mc_result with
   | 0 ->
-      Options.Self.feedback "MC Verification: TRUE";
+      Options.Self.feedback "TRUE";
       Property_status.emit mc_assert_emitter ~hyps:[] p Property_status.True;
       ui#rehighlight ()
   | 1 -> Options.Self.feedback "FALSE/UNKNOWN"

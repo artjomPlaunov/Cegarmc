@@ -2,19 +2,6 @@ module CT = Cil_types
 
 exception MC_Varinfo_Not_Found
 
-(* Read in <mc> function definitions. *)
-let read_mc_defs fname : (string list)= 
-  let lines = ref [] in
-    let in_chan = open_in fname in
-      try
-        while true do
-          lines := input_line in_chan :: !lines
-        done;
-        !lines
-      with End_of_file ->
-        close_in in_chan;
-        List.rev !lines
-
 let empty_spec =
   {
     CT.spec_behavior = [];
