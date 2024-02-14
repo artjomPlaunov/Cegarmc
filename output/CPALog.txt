@@ -1,0 +1,16 @@
+2024-02-14 12:51:06:399	INFO	CPAMain.detectFrontendLanguageIfNecessary	Language C detected and set for analysis
+
+2024-02-14 12:51:06:414	INFO	ResourceLimitChecker.fromConfiguration	Using the following resource limits: CPU-time limit of 900s
+
+2024-02-14 12:51:06:452	INFO	CPAchecker.run	CPAchecker 2.2.1-svn / predicateAnalysis (OpenJDK 64-Bit Server VM 17.0.6) started
+
+2024-02-14 12:51:06:461	INFO	CPAchecker.parse	Parsing CFA from file(s) "cegarmc_output.c"
+
+2024-02-14 12:51:07:150	INFO	PredicateCPA:PredicateCPA.<init>	Using predicate analysis with MathSAT5 version 5.6.8 (27814677e16f) (Jun 28 2022 17:03:19, gmp 6.1.2, gcc 6.3.0, 64-bit, reentrant) and JFactory 1.21.
+
+2024-02-14 12:51:07:247	INFO	PredicateCPA:PredicateCPARefiner.<init>	Using refinement for predicate analysis with PredicateAbstractionRefinementStrategy strategy.
+
+2024-02-14 12:51:07:259	INFO	CPAchecker.runAlgorithm	Starting analysis ...
+
+2024-02-14 12:51:07:349	INFO	CPAchecker.runAlgorithm	Stopping analysis ...
+

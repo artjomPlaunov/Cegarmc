@@ -1,0 +1,17 @@
+digraph ARG {
+node [style="filled" shape="box" color="white"]
+0 [fillcolor="cornflowerblue" label="0 @ N8\nmain entry\nAbstractionState: ABS0: true\n" id="0"]
+1 [label="1 @ N21\nmain\n" id="1"]
+2 [label="2 @ N12\nmain\n" id="2"]
+3 [label="3 @ N1\n__VERIFIER_assert entry\n" id="3"]
+4 [label="4 @ N2\n__VERIFIER_assert\n" id="4"]
+5 [label="5 @ N4\n__VERIFIER_assert\n" id="5"]
+8 [fillcolor="red" label="8 @ N5\n__VERIFIER_assert\nAbstractionState: ABS1: true\n AutomatonState: ErrorLabelAutomaton: _predefinedState_ERROR\n" id="8"]
+0 -> 1 [color="red" label="Line 0: \lINIT GLOBAL VARS\l" id="0 -> 1"]
+1 -> 2 [color="red" label="Lines 1 - 12: \lvoid abort();\lvoid __VERIFIER_assert(int cond);\lint __VERIFIER_nondet_int();\lvoid __VERIFIER_assume(int);\lvoid __VERIFIER_assert(int);\lint main();\lFunction start dummy edge\lint __retres;\lint x = 5;\lint y = 6;\l" id="1 -> 2"]
+2 -> 3 [color="red" label="Line 13: \l__VERIFIER_assert(x == y)\l" id="2 -> 3"]
+3 -> 4 [color="red" label="Line 0: \lFunction start dummy edge\l" id="3 -> 4"]
+4 -> 5 [color="red" label="Line 2: \l[cond == 0]\l" id="4 -> 5"]
+4 -> 6 [label="Line 2: \l[!(cond == 0)]\l" id="4 -> 6"]
+5 -> 8 [color="red" label="Line 2: \lLabel: ERROR\l" id="5 -> 8"]
+}

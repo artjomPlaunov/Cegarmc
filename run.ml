@@ -1,14 +1,21 @@
 exception MC_Unsupported_Code_Annot of string
 
-module T = Translate
 module CT = Cil_types
 module CB = Cil_builder.Pure
+module T = Translate
 module U = Utils
 
 let (prove_assert_msg : string) = "Prove assert using model checking"
 
-(* Copy Visitor for inserting <mc> functions
-   into the global environment. *)
+let mc_assert_emitter =
+  Emitter.create "mc_assert"
+    [ Emitter.Property_status ]
+    ~correctness:[] ~tuning:[]
+
+(* Copy Visitor for inserting <mc> function declarations into the global environment.
+   Any actual function definitions needed by <mc> are appended at the start
+   of the file, the main purpose for this visitor is to make function declarations
+   available in case we need to insert assert or assume function calls later. *)
 class insert_mc_functions prj =
   object (_)
     inherit Visitor.generic_frama_c_visitor (Visitor_behavior.copy prj)
@@ -18,13 +25,16 @@ class insert_mc_functions prj =
       let params = ("", CT.TInt (CT.IInt, []), []) in
       let new_fun =
         Cil.makeGlobalVar "__VERIFIER_assert"
-          (CT.TFun (CT.TVoid ([]), Some [ params ], false, []))
+          (CT.TFun (CT.TVoid [], Some [ params ], false, []))
       in
       new_fun.vstorage <- CT.Extern;
-      let cil_function = CT.Declaration (U.empty_spec, new_fun, None, new_fun.vdecl) in
+      let cil_function =
+        CT.Declaration (U.empty_spec, new_fun, None, new_fun.vdecl)
+      in
       let kf = { CT.fundec = cil_function; spec = U.empty_spec } in
       let () = Globals.Functions.register kf in
-      f.globals <- CT.GFunDecl (U.empty_spec, new_fun, new_fun.vdecl) :: f.globals;
+      f.globals <-
+        CT.GFunDecl (U.empty_spec, new_fun, new_fun.vdecl) :: f.globals;
       JustCopy
   end
 
@@ -42,8 +52,8 @@ class insert_mc_assert (sid : int) prj =
   object (_)
     inherit Visitor.generic_frama_c_visitor (Visitor_behavior.copy prj)
 
-    (* An ACSL assert is tied to a statement, so in order to access it and 
-       insert  an <mc> assert function call statement, we perform the 
+    (* An ACSL assert is tied to a statement, so in order to access it and
+       insert  an <mc> assert function call statement, we perform the
        insertion at block level. *)
     method! vblock (b : CT.block) =
       (* Split the statements comprising the block on the sid
@@ -65,10 +75,10 @@ class insert_mc_assert (sid : int) prj =
            fetch the assert code annotation, and convert the
            ACSL predicate to a CB exp.
         *)
-        let assertStmt = List.hd stmts2 in
-        let code_annots = Annotations.code_annot assertStmt in
+        let assert_stmt = List.hd stmts2 in
+        let code_annots = Annotations.code_annot assert_stmt in
         let assert_annot = List.hd code_annots in
-        
+
         let acsl_exp =
           match assert_annot.annot_content with
           | CT.AAssert (_, tp) ->
@@ -77,8 +87,8 @@ class insert_mc_assert (sid : int) prj =
           | _ ->
               raise
                 (MC_Unsupported_Code_Annot
-                   "Expected Assert Code annotation in \
-                    insert_mc_assert vblock visitor")
+                   "Expected Assert Code annotation in insert_mc_assert vblock \
+                    visitor")
         in
 
         (* Fetch the varinfo for the <mc> assert function,
@@ -90,12 +100,12 @@ class insert_mc_assert (sid : int) prj =
 
         (* Construct a CT instruction
            which corresponds to an <mc> assert call.*)
-        let funCall = CB.call `none assume_var [ acsl_exp ] in
-        let funCallInstr = CB.cil_instr ~loc:location funCall in
+        let fun_call = CB.call `none assume_var [ acsl_exp ] in
+        let fun_call_instr = CB.cil_instr ~loc:location fun_call in
 
         (* Insert the <mc> assert function call as a new
            statement in the block. *)
-        let newStmt = Cil.mkStmtOneInstr funCallInstr in
+        let newStmt = Cil.mkStmtOneInstr fun_call_instr in
         b.bstmts <- stmts1 @ [ newStmt ] @ stmts2;
         Cil.ChangeTo b
   end
@@ -107,8 +117,8 @@ let create_insert_mc_assert_visitor sid () =
 (* Model check a standalone assert, i.e.,
    a basic reachability verification.
 *)
-let mc_standalone_assert (s : CT.stmt) () : unit =
-
+let mc_standalone_assert (s : CT.stmt) (c : CT.code_annotation)
+    (ui : Design.main_window_extension_points) () : unit =
   (* First, use a copy visitor to insert the necessary
      declarations and functions for the model checker. *)
   let insert_decls_prj = create_insert_mc_functions_visitor () in
@@ -126,25 +136,40 @@ let mc_standalone_assert (s : CT.stmt) () : unit =
      should be <mc> ready. *)
   Project.on mc_project
     (fun () ->
-      let lines = ref [] in 
-      let in_chan = open_in "cpa_defs.c" in 
-      let cpa_headers = 
-        try 
-        while true; do
-          lines := input_line in_chan :: !lines
-          done; !lines
+      let lines = ref [] in
+      let in_chan = open_in "cpa_defs.c" in
+      let cpa_headers =
+        try
+          while true do
+            lines := input_line in_chan :: !lines
+          done;
+          !lines
         with End_of_file ->
           close_in in_chan;
-          List.rev !lines;
-      in 
+          List.rev !lines
+      in
       let f = Ast.get () in
       let chan = open_out "cegarmc_output.c" in
       let fmt = Format.formatter_of_out_channel chan in
-      let () = List.iter (fun s  -> Printf.fprintf chan "%s\n" s) cpa_headers in
-      Printer.pp_file fmt f
+      let () = List.iter (fun s -> Printf.fprintf chan "%s\n" s) cpa_headers in
+      Printer.pp_file fmt f)
+    ();
+  let cpa_cmd =
+    "$CPACHECKER/scripts/cpa.sh -predicateAnalysis cegarmc_output.c"
+  in
+  let _ = Sys.command cpa_cmd in
+  let mc_result = Sys.command "./mc-helper.sh < output/Statistics.txt" in
 
-      )
-    ()
+  let kf = Kernel_function.find_englobing_kf s in
+  let p = Property.ip_of_code_annot_single kf s c in
+
+  match mc_result with
+  | 0 ->
+      Options.Self.feedback "TRUE";
+      Property_status.emit mc_assert_emitter ~hyps:[] p Property_status.True;
+      ui#rehighlight ()
+  | 1 -> Options.Self.feedback "FALSE/UNKNOWN"
+  | _ -> Options.Self.feedback "somethin' else"
 
 (* Check if code annotations have a standalone assert. *)
 let has_standalone_assert (cs : CT.code_annotation list) : bool =
@@ -158,7 +183,7 @@ let has_standalone_assert (cs : CT.code_annotation list) : bool =
     | _ -> false
 
 let model_checking_selector (popup_factory : GMenu.menu GMenu.factory)
-    (_ : Design.main_window_extension_points) ~button:_
+    (ui : Design.main_window_extension_points) ~button:_
     (localizable : Pretty_source.localizable) =
   match localizable with
   (*  User has made a statement selection. *)
@@ -169,7 +194,7 @@ let model_checking_selector (popup_factory : GMenu.menu GMenu.factory)
         let code_annots = Annotations.code_annot stmt in
         (* Standalone Assert Verification *)
         if has_standalone_assert code_annots then
-          let callback = mc_standalone_assert stmt in
+          let callback = mc_standalone_assert stmt (List.hd code_annots) ui in
           ignore (popup_factory#add_item prove_assert_msg ~callback)
         else ()
   | _ -> ()
