@@ -1,1 +1,0 @@
-This is a Frama-C plugin which allows a user to run a model checker (CPAchecker, SATABS, CBMC) in order to verify an assertion or statement contract from within the frama-c C verification environment. I.e., the goal here is to be doing verification work for C software within Frama-C, and easily dispatch a certain predicate to be verified using a model checker. 
