@@ -1,0 +1,34 @@
+IntBool
+
+[main::__retres, main::__retval__]
+
+IntEq
+
+[main::y_1, main::y, main::y_0, main::x, __VERIFIER_assert::cond]
+
+IntAdd
+
+[]
+
+IntOverflow
+
+[]
+
+ALL
+
+[main::__retres, main::y_1, main::y, main::y_0, main::x, main::__retval__, __VERIFIER_assert::cond]
+
+DEPENDENCIES
+
+[[__VERIFIER_assert::cond, main::x, main::y] --> [0, 6],
+[main::__retres, main::__retval__] --> [0],
+[main::y_0] --> [6],
+[main::y_1] --> [7]]
+
+RELEVANT VARS
+
+[main::x, __VERIFIER_assert::cond, main::y]
+
+RELEVANT FIELDS
+
+{}
