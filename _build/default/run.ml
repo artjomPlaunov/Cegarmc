@@ -22,7 +22,6 @@ let run_mc () : int =
   let cpa_cmd =
     "$CPACHECKER/scripts/cpa.sh -predicateAnalysis cegarmc_output.c"
   in
-  (** Handle case with bad script command. *)
   let _ = Sys.command cpa_cmd in
   Sys.command "./mc-helper.sh < output/Statistics.txt"
 

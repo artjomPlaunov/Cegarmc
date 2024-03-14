@@ -1,7 +1,0 @@
-main::__retres	7
-main::y_1	6
-main::y	6
-main::y_0	6
-main::x	6
-main::__retval__	7
-__VERIFIER_assert::cond	6
