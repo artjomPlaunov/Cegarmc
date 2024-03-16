@@ -1,0 +1,351 @@
+[kernel] Parsing test1-ACSL-eva.c (with preprocessing)
+[kernel:typing:implicit-function-declaration] test1-ACSL-eva.c:19: Warning: 
+  Calling undeclared function __VERIFIER_assert. Old style K&R code?
+[eva] Analyzing a complete application starting at main
+[eva:initial-state] Values of globals at initialization
+  
+[eva] test1-ACSL-eva.c:6: 
+  Frama_C_dump_each:
+  # cvalue:
+  Frama_C_entropy_source ∈ [--..--]
+  x ∈ {0}
+  n ∈ UNINITIALIZED
+  y ∈ UNINITIALIZED
+  runtime_div ∈ UNINITIALIZED
+  __retres ∈ UNINITIALIZED
+  # octagon:
+  {[  ]}
+  ==END OF DUMP==
+[eva] using specification for function Frama_C_interval
+[eva] test1-ACSL-eva.c:10: 
+  Frama_C_dump_each:
+  # cvalue:
+  Frama_C_entropy_source ∈ [--..--]
+  x ∈ {0}
+  n ∈ [100..1000000]
+  y ∈ [100..1000000]
+  runtime_div ∈ UNINITIALIZED
+  __retres ∈ UNINITIALIZED
+  # octagon:
+  {[ n - y ∈ {0}
+      ]}
+  ==END OF DUMP==
+[eva] test1-ACSL-eva.c:12: 
+  Frama_C_dump_each:
+  # cvalue:
+  Frama_C_entropy_source ∈ [--..--]
+  x ∈ {0}
+  n ∈ [100..999999]
+  y ∈ [100..999999]
+  runtime_div ∈ UNINITIALIZED
+  __retres ∈ UNINITIALIZED
+  # octagon:
+  {[ n - y ∈ {0}
+      ]}
+  ==END OF DUMP==
+[eva] test1-ACSL-eva.c:16: 
+  Frama_C_dump_each:
+  # cvalue:
+  Frama_C_entropy_source ∈ [--..--]
+  x ∈ {1}
+  n ∈ [100..999999]
+  y ∈ [99..999998]
+  runtime_div ∈ UNINITIALIZED
+  __retres ∈ UNINITIALIZED
+  # octagon:
+  {[ n - y ∈ {1}
+      ]}
+  ==END OF DUMP==
+[eva:alarm] test1-ACSL-eva.c:18: Warning: assertion got status unknown.
+[kernel:annot:missing-spec] test1-ACSL-eva.c:19: Warning: 
+  Neither code nor specification for function __VERIFIER_assert,
+   generating default assigns. See -generated-spec-* options for more info
+[eva] using specification for function __VERIFIER_assert
+[eva] test1-ACSL-eva.c:11: starting to merge loop iterations
+[eva] test1-ACSL-eva.c:12: 
+  Frama_C_dump_each:
+  # cvalue:
+  Frama_C_entropy_source ∈ [--..--]
+  x ∈ {0; 1}
+  n ∈ [100..1000000]
+  y ∈ [99..999999]
+  runtime_div ∈ {1} or UNINITIALIZED
+  __retres ∈ UNINITIALIZED
+  # octagon:
+  {[ n - y ∈ {0; 1}
+     x + y ∈ [99..999999]
+     x + n ∈ [99..1000000]
+      ]}
+  ==END OF DUMP==
+[eva] test1-ACSL-eva.c:16: 
+  Frama_C_dump_each:
+  # cvalue:
+  Frama_C_entropy_source ∈ [--..--]
+  x ∈ {1; 2}
+  n ∈ [100..1000000]
+  y ∈ [98..999998]
+  runtime_div ∈ {1} or UNINITIALIZED
+  __retres ∈ UNINITIALIZED
+  # octagon:
+  {[ n - y ∈ {1; 2}
+     x + y ∈ [99..999999]
+     x + n ∈ [100..1000001]
+      ]}
+  ==END OF DUMP==
+[eva] test1-ACSL-eva.c:12: 
+  Frama_C_dump_each:
+  # cvalue:
+  Frama_C_entropy_source ∈ [--..--]
+  x ∈ {0; 1; 2}
+  n ∈ [100..1000000]
+  y ∈ [98..999999]
+  runtime_div ∈ {0; 1; 2} or UNINITIALIZED
+  __retres ∈ UNINITIALIZED
+  # octagon:
+  {[ n - y ∈ {0; 1; 2}
+     x + y ∈ [99..999999]
+     x + n ∈ [99..1000001]
+      ]}
+  ==END OF DUMP==
+[eva] test1-ACSL-eva.c:16: 
+  Frama_C_dump_each:
+  # cvalue:
+  Frama_C_entropy_source ∈ [--..--]
+  x ∈ {1; 2; 3}
+  n ∈ [100..1000000]
+  y ∈ [97..999998]
+  runtime_div ∈ {0; 1; 2} or UNINITIALIZED
+  __retres ∈ UNINITIALIZED
+  # octagon:
+  {[ n - y ∈ {1; 2; 3}
+     x + y ∈ [99..999999]
+     x + n ∈ [100..1000002]
+      ]}
+  ==END OF DUMP==
+[eva] test1-ACSL-eva.c:12: 
+  Frama_C_dump_each:
+  # cvalue:
+  Frama_C_entropy_source ∈ [--..--]
+  x ∈ [0..999998]
+  n ∈ [100..1000000]
+  y ∈ [1..999999]
+  runtime_div ∈ {0; 1; 2; 3} or UNINITIALIZED
+  __retres ∈ UNINITIALIZED
+  # octagon:
+  {[ n - y ∈ [0..--]
+     x + y ∈ [99..999999]
+     x + n ∈ [99..--]
+      ]}
+  ==END OF DUMP==
+[eva] test1-ACSL-eva.c:16: 
+  Frama_C_dump_each:
+  # cvalue:
+  Frama_C_entropy_source ∈ [--..--]
+  x ∈ [1..999999]
+  n ∈ [100..1000000]
+  y ∈ [0..999998]
+  runtime_div ∈ {0; 1; 2; 3} or UNINITIALIZED
+  __retres ∈ UNINITIALIZED
+  # octagon:
+  {[ n - y ∈ [1..--]
+     x + y ∈ [99..999999]
+     x + n ∈ [100..--]
+      ]}
+  ==END OF DUMP==
+[eva] test1-ACSL-eva.c:12: 
+  Frama_C_dump_each:
+  # cvalue:
+  Frama_C_entropy_source ∈ [--..--]
+  x ∈ [0..999999]
+  n ∈ [100..1000000]
+  y ∈ [0..999999]
+  runtime_div ∈ [0..999999] or UNINITIALIZED
+  __retres ∈ UNINITIALIZED
+  # octagon:
+  {[ n - y ∈ [0..--]
+     x + y ∈ [99..999999]
+     x + n ∈ [99..--]
+      ]}
+  ==END OF DUMP==
+[eva] test1-ACSL-eva.c:16: 
+  Frama_C_dump_each:
+  # cvalue:
+  Frama_C_entropy_source ∈ [--..--]
+  x ∈ [1..1000000]
+  n ∈ [100..1000000]
+  y ∈ [-1..999998]
+  runtime_div ∈ [0..999999] or UNINITIALIZED
+  __retres ∈ UNINITIALIZED
+  # octagon:
+  {[ n - y ∈ [1..--]
+     x + y ∈ [99..999999]
+     x + n ∈ [100..--]
+      ]}
+  ==END OF DUMP==
+[eva] test1-ACSL-eva.c:12: 
+  Frama_C_dump_each:
+  # cvalue:
+  Frama_C_entropy_source ∈ [--..--]
+  x ∈ [0..1000000]
+  n ∈ [100..1000000]
+  y ∈ [-1..999999]
+  runtime_div ∈ [0..1000000] or UNINITIALIZED
+  __retres ∈ UNINITIALIZED
+  # octagon:
+  {[ n - y ∈ [0..--]
+     x + y ∈ [99..999999]
+     x + n ∈ [99..--]
+      ]}
+  ==END OF DUMP==
+[eva] test1-ACSL-eva.c:16: 
+  Frama_C_dump_each:
+  # cvalue:
+  Frama_C_entropy_source ∈ [--..--]
+  x ∈ [1..1000001]
+  n ∈ [100..1000000]
+  y ∈ [-2..999998]
+  runtime_div ∈ [0..1000000] or UNINITIALIZED
+  __retres ∈ UNINITIALIZED
+  # octagon:
+  {[ n - y ∈ [1..--]
+     x + y ∈ [99..999999]
+     x + n ∈ [100..--]
+      ]}
+  ==END OF DUMP==
+[eva] test1-ACSL-eva.c:12: 
+  Frama_C_dump_each:
+  # cvalue:
+  Frama_C_entropy_source ∈ [--..--]
+  x ∈ [0..1000001]
+  n ∈ [100..1000000]
+  y ∈ [-2..999999]
+  runtime_div ∈ [0..1000001] or UNINITIALIZED
+  __retres ∈ UNINITIALIZED
+  # octagon:
+  {[ n - y ∈ [0..--]
+     x + y ∈ [99..999999]
+     x + n ∈ [99..--]
+      ]}
+  ==END OF DUMP==
+[eva] test1-ACSL-eva.c:16: 
+  Frama_C_dump_each:
+  # cvalue:
+  Frama_C_entropy_source ∈ [--..--]
+  x ∈ [1..1000002]
+  n ∈ [100..1000000]
+  y ∈ [-3..999998]
+  runtime_div ∈ [0..1000001] or UNINITIALIZED
+  __retres ∈ UNINITIALIZED
+  # octagon:
+  {[ n - y ∈ [1..--]
+     x + y ∈ [99..999999]
+     x + n ∈ [100..--]
+      ]}
+  ==END OF DUMP==
+[eva] test1-ACSL-eva.c:12: 
+  Frama_C_dump_each:
+  # cvalue:
+  Frama_C_entropy_source ∈ [--..--]
+  x ∈ [0..2147483647]
+  n ∈ [100..1000000]
+  y ∈ [-2147483548..999999]
+  runtime_div ∈ [0..1000002] or UNINITIALIZED
+  __retres ∈ UNINITIALIZED
+  # octagon:
+  {[ n - y ∈ [0..--]
+     x + y ∈ [99..999999]
+     x + n ∈ [99..--]
+      ]}
+  ==END OF DUMP==
+[eva:alarm] test1-ACSL-eva.c:13: Warning: 
+  signed overflow. assert x + 1 ≤ 2147483647;
+[eva] test1-ACSL-eva.c:16: 
+  Frama_C_dump_each:
+  # cvalue:
+  Frama_C_entropy_source ∈ [--..--]
+  x ∈ [1..2147483647]
+  n ∈ [100..1000000]
+  y ∈ [-2147483548..999998]
+  runtime_div ∈ [0..1000002] or UNINITIALIZED
+  __retres ∈ UNINITIALIZED
+  # octagon:
+  {[ n - y ∈ [1..--]
+     x + y ∈ [99..999999]
+     x + n ∈ [100..--]
+      ]}
+  ==END OF DUMP==
+[eva:alarm] test1-ACSL-eva.c:19: Warning: 
+  signed overflow. assert n - y ≤ 2147483647;
+[eva:alarm] test1-ACSL-eva.c:20: Warning: 
+  signed overflow. assert n - y ≤ 2147483647;
+[eva] test1-ACSL-eva.c:12: 
+  Frama_C_dump_each:
+  # cvalue:
+  Frama_C_entropy_source ∈ [--..--]
+  x ∈ [0..2147483647]
+  n ∈ [100..1000000]
+  y ∈ [-2147483548..999999]
+  runtime_div ∈ [0..2147483647] or UNINITIALIZED
+  __retres ∈ UNINITIALIZED
+  # octagon:
+  {[ n - y ∈ [0..--]
+     x + y ∈ [99..999999]
+     x + n ∈ [99..--]
+      ]}
+  ==END OF DUMP==
+[eva] test1-ACSL-eva.c:16: 
+  Frama_C_dump_each:
+  # cvalue:
+  Frama_C_entropy_source ∈ [--..--]
+  x ∈ [1..2147483647]
+  n ∈ [100..1000000]
+  y ∈ [-2147483548..999998]
+  runtime_div ∈ [0..2147483647] or UNINITIALIZED
+  __retres ∈ UNINITIALIZED
+  # octagon:
+  {[ n - y ∈ [1..--]
+     x + y ∈ [99..999999]
+     x + n ∈ [100..--]
+      ]}
+  ==END OF DUMP==
+[eva] test1-ACSL-eva.c:22: 
+  Frama_C_dump_each:
+  # cvalue:
+  Frama_C_entropy_source ∈ [--..--]
+  x ∈ [0..2147483647]
+  n ∈ [100..1000000]
+  y ∈ [-2146483647..1000000]
+  runtime_div ∈ [0..2147483647] or UNINITIALIZED
+  __retres ∈ UNINITIALIZED
+  # octagon:
+  {[ n - y ∈ [0..--]
+     x + y ∈ {1000000; 1000001}
+     x + n ∈ [1000000..--]
+      ]}
+  ==END OF DUMP==
+[scope:rm_asserts] removing 1 assertion(s)
+[eva] ====== VALUES COMPUTED ======
+[eva:final-states] Values at end of function main:
+  Frama_C_entropy_source ∈ [--..--]
+  x ∈ [0..2147483647]
+  n ∈ [100..1000000]
+  y ∈ [-2146483647..1000000]
+  runtime_div ∈ [0..2147483647] or UNINITIALIZED
+  __retres ∈ {0}
+[eva:summary] ====== ANALYSIS SUMMARY ======
+  ----------------------------------------------------------------------------
+  1 function analyzed (out of 1): 100% coverage.
+  In this function, 24 statements reached (out of 24): 100% coverage.
+  ----------------------------------------------------------------------------
+  Some errors and warnings have been raised during the analysis:
+    by the Eva analyzer:      0 errors    0 warnings
+    by the Frama-C kernel:    0 errors    2 warnings
+  ----------------------------------------------------------------------------
+  3 alarms generated by the analysis:
+       3 integer overflows
+  ----------------------------------------------------------------------------
+  Evaluation of the logical properties reached by the analysis:
+    Assertions        0 valid     1 unknown     0 invalid      1 total
+    Preconditions     1 valid     0 unknown     0 invalid      1 total
+  50% of the logical properties reached have been proven.
+  ----------------------------------------------------------------------------

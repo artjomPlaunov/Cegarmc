@@ -17,6 +17,7 @@ int main () {
     while (x+y <= 999999) {
         x++;
         y--;
+        __VERIFIER_assume((n-y) > 0);
         __VERIFIER_assert( (n-y) > 0);
         runtime_div = x/(n-y);
     }
