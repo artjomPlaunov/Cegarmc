@@ -1,24 +1,25 @@
 import os
 import time
 
-inputFile = "test1-ACSL"
-cmd = f"frama-c -eva -eva-domains octagon -eva-msg-key d-octagon"
+inputFile = "test1-ACSL.c"
+in_file = open(inputFile, 'r')
 
-file = open(inputFile + ".c", 'r')
+outputFile = "test1-ACSL-eva.c"
 
-outputFile = inputFile + "-eva.c"
-f = open(outputFile, "a")
-#f.writelines(["See you soon!", "Over and out."])
-#f.close()
+framac_file = open(outputFile, "a")
 
-
-while line := file.readline() :
+counter = 0
+while line := in_file.readline() :
     if "__FRAMAC_OCTAGON:" in line:
-        f.writelines(["Frama_C_dump_each();\n", line])
+        framac_file.writelines(["Frama_C_dump_each();\n", line])
+        counter += 1
     else:
-        f.writelines([line])
+        framac_file.writelines([line])
 
-f.close()
-os.system(cmd + " " + outputFile)
+framac_file.close()
+in_file.close()
+
+cmd = f"frama-c -eva -eva-domains octagon -eva-msg-key d-octagon {outputFile}"
+os.system(cmd)
 
 
