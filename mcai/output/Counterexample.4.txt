@@ -1,0 +1,55 @@
+none:	N8 -{INIT GLOBAL VARS}-> N30
+line 1:	N30 -{void abort();}-> N31
+line 2:	N31 -{void __VERIFIER_assert(int cond);}-> N32
+line 3:	N32 -{int __VERIFIER_nondet_int();}-> N33
+line 4:	N33 -{void __VERIFIER_assume(int);}-> N34
+line 6:	N34 -{void __VERIFIER_assert(int);}-> N35
+lines 8-26:	N35 -{int main();}-> N36
+none:	N36 -{Function start dummy edge}-> N9
+line 9:	N9 -{int x = 0;}-> N10
+line 10:	N10 -{int n;}-> N11
+line 10:	N11 -{n = __VERIFIER_nondet_int();}-> N12
+line 11:	N12 -{[!(n < 100)]}-> N15
+line 11:	N15 -{[!(n > 1000000)]}-> N13
+line 14:	N13 -{int y = n;}-> N17
+line 15:	N17 -{int runtime_div;}-> N18
+line 17:	N18 -{while}-> N19
+line 17:	N19 -{[(x + y) <= 999999]}-> N20
+line 18:	N20 -{const int __CPAchecker_TMP_0 = x;}-> N22
+line 18:	N22 -{x = x + 1;}-> N23
+line 18:	N23 -{__CPAchecker_TMP_0;}-> N24
+line 19:	N24 -{const int __CPAchecker_TMP_1 = y;}-> N25
+line 19:	N25 -{y = y - 1;}-> N26
+line 19:	N26 -{__CPAchecker_TMP_1;}-> N27
+line 20:	N27 -{__VERIFIER_assert((n - y) > 0)}-> N1
+none:	N1 -{Function start dummy edge}-> N2
+line 2:	N2 -{[!(cond == 0)]}-> N3
+none:	N3 -{default return}-> N0
+line 20:	N0 -{Return edge from __VERIFIER_assert to main: __VERIFIER_assert((n - y) > 0);}-> N28
+line 21:	N28 -{runtime_div = x / (n - y);}-> N29
+none:	N29 -{}-> N19
+line 17:	N19 -{[(x + y) <= 999999]}-> N20
+line 18:	N20 -{const int __CPAchecker_TMP_0 = x;}-> N22
+line 18:	N22 -{x = x + 1;}-> N23
+line 18:	N23 -{__CPAchecker_TMP_0;}-> N24
+line 19:	N24 -{const int __CPAchecker_TMP_1 = y;}-> N25
+line 19:	N25 -{y = y - 1;}-> N26
+line 19:	N26 -{__CPAchecker_TMP_1;}-> N27
+line 20:	N27 -{__VERIFIER_assert((n - y) > 0)}-> N1
+none:	N1 -{Function start dummy edge}-> N2
+line 2:	N2 -{[!(cond == 0)]}-> N3
+none:	N3 -{default return}-> N0
+line 20:	N0 -{Return edge from __VERIFIER_assert to main: __VERIFIER_assert((n - y) > 0);}-> N28
+line 21:	N28 -{runtime_div = x / (n - y);}-> N29
+none:	N29 -{}-> N19
+line 17:	N19 -{[(x + y) <= 999999]}-> N20
+line 18:	N20 -{const int __CPAchecker_TMP_0 = x;}-> N22
+line 18:	N22 -{x = x + 1;}-> N23
+line 18:	N23 -{__CPAchecker_TMP_0;}-> N24
+line 19:	N24 -{const int __CPAchecker_TMP_1 = y;}-> N25
+line 19:	N25 -{y = y - 1;}-> N26
+line 19:	N26 -{__CPAchecker_TMP_1;}-> N27
+line 20:	N27 -{__VERIFIER_assert((n - y) > 0)}-> N1
+none:	N1 -{Function start dummy edge}-> N2
+line 2:	N2 -{[cond == 0]}-> N4
+line 2:	N4 -{Label: ERROR}-> N5

@@ -2,7 +2,7 @@
  (name Cegarmc)
  (public_name frama-c-cegarmc.core)
  (flags -open Frama_c_kernel -open Frama_c_gui :standard -w -9)
- (libraries frama-c.gui frama-c.kernel))
+ (libraries frama-c.gui frama-c.kernel frama-c-eva.core))
 
 (plugin
  (optional)

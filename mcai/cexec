@@ -1,0 +1,2 @@
+#!/bin/bash
+~/CPAchecker-2.3-unix/scripts/cpa.sh -predicateAnalysis -setprop counterexample.export.exportAllFoundErrorPaths=true -setprop counterexample.export.core=Counterexample.%d.core.txt -setprop cpa.predicate.abstractions.asExpressions=true -setprop counterexample.export.enabled=true -setprop counterexample.export.exportImmediately=true -preprocess $1

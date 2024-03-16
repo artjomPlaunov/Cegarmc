@@ -49,7 +49,7 @@
  (archives (byte core/Cegarmc.cma) (native core/Cegarmc.cmxa))
  (plugins (byte core/Cegarmc.cma) (native core/Cegarmc.cmxs))
  (native_archives core/Cegarmc.a)
- (requires frama-c.gui frama-c.kernel)
+ (requires frama-c.gui frama-c.kernel frama-c-eva.core)
  (main_module_name Cegarmc)
  (modes byte native)
  (modules

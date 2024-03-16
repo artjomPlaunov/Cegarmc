@@ -1,7 +1,7 @@
 package "core" (
   directory = "core"
   description = ""
-  requires = "frama-c.gui frama-c.kernel"
+  requires = "frama-c-eva.core frama-c.gui frama-c.kernel"
   archive(byte) = "Cegarmc.cma"
   archive(native) = "Cegarmc.cmxa"
   plugin(byte) = "Cegarmc.cma"
