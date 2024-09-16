@@ -1,6 +1,8 @@
 module CT = Cil_types
 
 exception MC_Varinfo_Not_Found
+exception MC_Unsupported_Construct of string
+exception MC_Internal_Bug of string
 
 (* Read in <mc> function definitions. *)
 let read_mc_defs fname : (string list)= 

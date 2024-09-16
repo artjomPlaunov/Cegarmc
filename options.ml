@@ -9,7 +9,7 @@ module Enabled = Self.False (struct
   let help = "when on (off by default), enable Cegarmc."
 end)
 
-module Output_file = Self.String (struct
+module OutputFile = Self.String (struct
   let option_name = "-cegarmc-output"
   let default = "-"
   let arg_name = "output-file"

@@ -1,7 +1,7 @@
 let output msg =
   try
-    let filename = Options.Output_file.get () in
-    if Options.Output_file.is_default () then Options.Self.result "%s" msg
+    let filename = Options.OutputFile.get () in
+    if Options.OutputFile.is_default () then Options.Self.result "%s" msg
     else
       let chan = open_out filename in
       Printf.fprintf chan "%s\n" msg;
