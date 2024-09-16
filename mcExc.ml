@@ -1,0 +1,3 @@
+exception MC_Varinfo_Not_Found
+exception MC_Unsupported_Construct of string
+exception MC_Internal_Bug of string

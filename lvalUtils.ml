@@ -1,12 +1,13 @@
 open Cil_types
-open Utils
+open McExc
+open Set
 
 (* This is a list of the vid's of the varinfos of variables that
    were initialized locally. This is necessary to handle Frama-C's
    Local_init type of instruction. *)
    let local_init : int list ref = ref []
 
-module LvalSet = Set.Make (
+module LvalSet = Make (
   struct
     (* ordered by position, with pointer > pointee *)
     let compare =
